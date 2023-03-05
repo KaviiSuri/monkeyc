@@ -6,10 +6,13 @@ import (
 
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/guptarohit/asciigraph"
 )
 
 const (
-	width = 60.
+	graphHeight = 3
+	maxWidth       = 60.
 	// charsPerWord is the average characters per word used by most typing tests
 	// to calculate your WPM score.
 	charsPerWord = 5.
@@ -90,9 +93,10 @@ func (m Ui) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return m.updateProgress()
 	case tea.WindowSizeMsg:
+		fmt.Fprintf(f, "WindowSizeMsg: %v %v", msg.Width, msg.Height)
 		m.Progress.Width = msg.Width - 4
-		if m.Progress.Width > width {
-			m.Progress.Width = width
+		if m.Progress.Width > maxWidth {
+			m.Progress.Width = maxWidth
 		}
 		return m, nil
 
@@ -124,19 +128,24 @@ func (m Ui) View() string {
 		}
 	}
 
-	s := fmt.Sprintf("\n %s\n\n%s", m.Progress.View(), typed)
-
 	if len(remaining) > 0 {
-		s += CurrentStyle.Render(string(remaining[:1]))
-		s += UnTypedStyle.Render(string(remaining[1:]))
+		typed += CurrentStyle.Render(string(remaining[:1]))
+		typed += UnTypedStyle.Render(string(remaining[1:]))
 	}
+
+	s := fmt.Sprintf(
+		"\n %s\n\n%s",
+		m.Progress.View(),
+		lipgloss.
+			NewStyle().
+			Width(m.Progress.Width).
+			Render(typed),
+	)
 
 	var wpm float64
 	if len(m.Typed) > 1 {
 		wpm = (m.Score / charsPerWord) / (float64(time.Since(m.Start).Minutes()))
 	}
-
-	s += fmt.Sprintf("\n\nWPM: %v", int(wpm))
 
 	if len(m.Typed) > charsPerWord {
 		wpms = append(wpms, wpm)
@@ -146,6 +155,16 @@ func (m Ui) View() string {
 	if len(wpmsCount) <= 0 {
 		wpmsCount = []float64{0}
 	}
+
+	graph := asciigraph.Plot(
+		wpmsCount,
+		asciigraph.Height(graphHeight),
+		asciigraph.Width(m.Progress.Width-5),
+		asciigraph.Precision(2),
+		asciigraph.SeriesColors(asciigraph.Blue),
+	)
+
+	s += fmt.Sprintf("\n\n%s\n\nWPM: %2.f\n", graph, wpm)
 
 	return s
 }

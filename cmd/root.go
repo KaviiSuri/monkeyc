@@ -4,15 +4,14 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"log"
-	"os"
-
 	"github.com/KaviiSuri/monkeyc/pkg/ui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
+	"log"
+	"os"
 )
 
-const words = "possible since through follow one long can way know want part out she lead \ncould call so general here we should find how late end where look how both year present end"
+const words = "possible since through follow one long can way know want part out she lead could call so general here we should find how late end where look how both year present end"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
